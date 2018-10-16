@@ -24,11 +24,17 @@ type GoCommand struct {
 // Help displays help output for the command.
 func (c *GoCommand) Help() string {
 	helpText := `
-Usage: pitch go
+Usage: pitch go <source> <directory>
 
     Go is used to run the bootstrap/scaffold process.
 
 General Options:
+
+	source:
+		The source url/path to the yaml template.
+
+	directory:
+		The directory to scaffold/bootstrap into.
 
     ` + generalOptionsUsage() + `
     `
