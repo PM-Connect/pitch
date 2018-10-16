@@ -110,11 +110,14 @@ func (c *GoCommand) Run(args []string) int {
 	}
 
 	for name, variable := range scf.UserInput {
-		value, err := c.UI.Ask(variable.Description)
+		var value string
 
-		if err != nil {
-			c.UI.Error(fmt.Sprintf("Error retrieving input for variable %s", name))
-			return 1
+		for value == "" {
+			value, _ = c.UI.Ask(variable.Description)
+
+			if value == "" && variable.Value != "" {
+				value = variable.Value
+			}
 		}
 
 		variable.Value = value
