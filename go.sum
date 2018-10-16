@@ -1,6 +1,8 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/Flaque/filet v0.0.0-20180310200134-dbf95344df50 h1:i8cXTCLgsAATM+7h5kA8+YT5y6BhEDmHI8x2BDtektA=
 github.com/Flaque/filet v0.0.0-20180310200134-dbf95344df50/go.mod h1:TK+jB3mBs+8ZMWhU5BqZKnZWJ1MrLo8etNVg51ueTBo=
+github.com/PM-Connect/pitch v1.0.0 h1:0e7kKwR5UZkd268yqlIvZhicEsvuj+5c9lrwnoUldh4=
+github.com/PM-Connect/pitch v1.0.0/go.mod h1:K3C6hoNvrJk1P1zhIlQ91NRL4LbBiwNY4WuuQKWUNaU=
 github.com/PM-Connect/tent v1.0.2 h1:BG5dv0GZAa/4m9++dhg1L+mn2x0Z3D3BSfpTD6Y8iRA=
 github.com/PM-Connect/tent v1.0.2/go.mod h1:FXD/pTVGdUbG+5x4Uli0quZiYuKwVuh33RJZcL5nxQQ=
 github.com/a8m/envsubst v1.1.0 h1:d+14SVq1lbI+JuxhEqYduWofZ0/qQHatwm3TBzvdzaE=

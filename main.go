@@ -9,8 +9,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/PM-Connect/pitch/command"
 	"github.com/mitchellh/cli"
+	"github.com/pm-connect/pitch/command"
 )
 
 func main() {

@@ -4,8 +4,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/PM-Connect/pitch/scaffold"
 	"github.com/mitchellh/cli"
+	"github.com/pm-connect/pitch/scaffold"
 )
 
 func generalOptionsUsage() string {

@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/PM-Connect/pitch/scaffold"
-	"github.com/PM-Connect/pitch/utils"
+	"github.com/pm-connect/pitch/scaffold"
+	"github.com/pm-connect/pitch/utils"
 	"github.com/valyala/fasttemplate"
 	validator "gopkg.in/go-playground/validator.v9"
 )
