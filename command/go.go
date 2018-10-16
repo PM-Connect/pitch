@@ -93,8 +93,20 @@ func (c *GoCommand) Run(args []string) int {
 
 	if utils.IsValidURL(source) {
 		loader = c.URLLoader
+
+		if verbose {
+			c.UI.Output(fmt.Sprintf("Using URL loader for source: %s", source))
+		}
 	} else {
 		loader = c.FileLoader
+
+		if verbose {
+			c.UI.Output(fmt.Sprintf("Using File loader for source: %s", source))
+		}
+	}
+
+	if verbose {
+		c.UI.Output("Loading source.")
 	}
 
 	scf, err := loader.Get(source)
@@ -106,6 +118,10 @@ func (c *GoCommand) Run(args []string) int {
 
 	validate := *validator.New()
 
+	if verbose {
+		c.UI.Output("Validating source template configuration.")
+	}
+
 	err = validate.Struct(scf)
 
 	if err != nil {
@@ -115,20 +131,32 @@ func (c *GoCommand) Run(args []string) int {
 		}
 	}
 
+	if verbose {
+		c.UI.Output("Requesting variables from user.")
+	}
+
 	for name, variable := range scf.UserInput {
 		var value string
+
+		c.UI.Output(fmt.Sprintf("Fetching variable \"%s\"", name))
 
 		for value == "" {
 			value, _ = c.UI.Ask(variable.Description)
 
 			if value == "" && variable.Value != "" {
 				value = variable.Value
+			} else if verbose {
+				c.UI.Output("Value is empty and there is no default. Please enter a value.")
 			}
 		}
 
 		variable.Value = value
 
 		scf.UserInput[name] = variable
+	}
+
+	if verbose {
+		c.UI.Output("Parsing file conditions and working out applicable files.")
 	}
 
 	filesToCreate := make(map[string]scaffold.File)
@@ -156,7 +184,16 @@ func (c *GoCommand) Run(args []string) int {
 
 		if passed {
 			filesToCreate[name] = file
+			if verbose {
+				c.UI.Output(fmt.Sprintf("File conditions successful for file: %s", name))
+			}
+		} else if verbose {
+			c.UI.Output(fmt.Sprintf("File conditions failed for file: %s", name))
 		}
+	}
+
+	if verbose {
+		c.UI.Output("Generating files.")
 	}
 
 	for name, file := range filesToCreate {
@@ -175,8 +212,6 @@ func (c *GoCommand) Run(args []string) int {
 			default:
 				return w.Write([]byte(tag))
 			}
-
-			return w.Write([]byte(tag))
 		})
 
 		if strings.HasPrefix(name, "/") {
@@ -206,9 +241,17 @@ func (c *GoCommand) Run(args []string) int {
 				templateTags = defaultTemplateTags
 			}
 
+			if verbose {
+				c.UI.Output(fmt.Sprintf("Templating enabled for file. Parsing template using tags (open: \"%s\", close: \"%s\")", templateTags.Open, templateTags.Close))
+			}
+
 			template := fasttemplate.New(file.Template, templateTags.Open, templateTags.Close)
 
 			file.Template = template.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+				if verbose {
+					c.UI.Output(fmt.Sprintf("Replacing variable: %s", tag))
+				}
+
 				for name, variable := range scf.UserInput {
 					if name == tag {
 						return w.Write([]byte(variable.Value))
@@ -226,6 +269,10 @@ func (c *GoCommand) Run(args []string) int {
 					return w.Write([]byte(tag))
 				}
 			})
+		}
+
+		if verbose {
+			c.UI.Output(fmt.Sprintf("Writing file: %s", path))
 		}
 
 		err := c.Writer.Write(path, file)
