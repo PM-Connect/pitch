@@ -1,0 +1,47 @@
+package command
+
+import (
+	"os"
+	"strings"
+
+	"github.com/PM-Connect/pitch/scaffold"
+	"github.com/mitchellh/cli"
+)
+
+func generalOptionsUsage() string {
+	helpText := `
+    -verbose
+        Enables verbose logging.
+    `
+
+	return strings.TrimSpace(helpText)
+}
+
+// Commands creates all of the possible commands that can be run.
+func Commands() map[string]cli.CommandFactory {
+	meta := Meta{}
+
+	meta.UI = &cli.BasicUi{
+		Reader:      os.Stdin,
+		Writer:      os.Stdout,
+		ErrorWriter: os.Stderr,
+	}
+
+	meta.UI = &cli.ColoredUi{
+		Ui:         meta.UI,
+		ErrorColor: cli.UiColorRed,
+		WarnColor:  cli.UiColorYellow,
+		InfoColor:  cli.UiColorGreen,
+	}
+
+	return map[string]cli.CommandFactory{
+		"go": func() (cli.Command, error) {
+			return &GoCommand{
+				Meta:       meta,
+				FileLoader: new(scaffold.YamlFileLoader),
+				URLLoader:  new(scaffold.URLFileLoader),
+				Writer:     new(scaffold.IoWriter),
+			}, nil
+		},
+	}
+}

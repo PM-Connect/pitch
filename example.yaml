@@ -1,0 +1,19 @@
+user_input:
+    project_name:
+      description: "Enter a project name:"
+    use_main_file:
+      description: "Include the main file? (y|n)"
+
+files:
+    path/%project_name%.nomad:
+        mode: 0644
+        conditions:
+          - field: use_main_file
+            value: y
+            operator: equal
+        template: |-
+            # test
+            Test: var
+            Project - %project_name%
+            A simple multi-line
+            text file template.
