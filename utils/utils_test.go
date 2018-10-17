@@ -18,3 +18,12 @@ func TestIsValidURLWorksForInvalidURLs(t *testing.T) {
 	assert.False(t, IsValidURL("some/string/like/a/path"))
 	assert.False(t, IsValidURL("somewhere.com"))
 }
+
+func TestRemovePrefixForStringWithPrefix(t *testing.T) {
+	assert.Equal(t, "my-string", RemovePrefix("/my-string", "/"))
+	assert.Equal(t, "my-string", RemovePrefix("///my-string", "///"))
+}
+
+func TestRemovePrefixForStringWithoutPrefix(t *testing.T) {
+	assert.Equal(t, "my-string", RemovePrefix("my-string", "/"))
+}
