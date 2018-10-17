@@ -27,3 +27,12 @@ func TestRemovePrefixForStringWithPrefix(t *testing.T) {
 func TestRemovePrefixForStringWithoutPrefix(t *testing.T) {
 	assert.Equal(t, "my-string", RemovePrefix("my-string", "/"))
 }
+
+func TestEnsureSuffixForStringWithoutSuffix(t *testing.T) {
+	assert.Equal(t, "my-string/", EnsureSuffix("my-string", "/"))
+	assert.Equal(t, "my-string//", EnsureSuffix("my-string", "//"))
+}
+
+func TestEnsureSuffixForStringWithSuffix(t *testing.T) {
+	assert.Equal(t, "my-string/", EnsureSuffix("my-string/", "/"))
+}

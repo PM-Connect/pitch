@@ -67,14 +67,7 @@ func (c *GoCommand) Run(args []string) int {
 
 	if len(args) > 1 {
 		dir = args[1]
-	}
-
-	if len(source) == 0 {
-		c.UI.Error("A source must be provided as the first argument.")
-		return 1
-	}
-
-	if len(dir) == 0 {
+	} else {
 		userDir, err := c.UI.Ask("Please enter a directory name (use ./ for current path):")
 
 		if err != nil {
@@ -85,8 +78,11 @@ func (c *GoCommand) Run(args []string) int {
 		dir = userDir
 	}
 
-	if !strings.HasSuffix(dir, "/") {
-		dir = dir + "/"
+	dir = utils.EnsureSuffix(dir, "/")
+
+	if len(source) == 0 {
+		c.UI.Error("A source must be provided as the first argument.")
+		return 1
 	}
 
 	var loader scaffold.Loader

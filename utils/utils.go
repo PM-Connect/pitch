@@ -24,3 +24,12 @@ func RemovePrefix(value string, prefix string) string {
 
 	return value
 }
+
+// EnsureSuffix makes sure a string ends with a given suffix.
+func EnsureSuffix(value string, suffix string) string {
+	if !strings.HasSuffix(value, suffix) {
+		return value + suffix
+	}
+
+	return value
+}
