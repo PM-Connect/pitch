@@ -94,20 +94,14 @@ func (c *GoCommand) Run(args []string) int {
 	if utils.IsValidURL(source) {
 		loader = c.URLLoader
 
-		if verbose {
-			c.UI.Output(fmt.Sprintf("Using URL loader for source: %s", source))
-		}
+		c.verboseOutput(fmt.Sprintf("Using URL loader for source: %s", source), verbose)
 	} else {
 		loader = c.FileLoader
 
-		if verbose {
-			c.UI.Output(fmt.Sprintf("Using File loader for source: %s", source))
-		}
+		c.verboseOutput(fmt.Sprintf("Using File loader for source: %s", source), verbose)
 	}
 
-	if verbose {
-		c.UI.Output("Loading source.")
-	}
+	c.verboseOutput("Loading source.", verbose)
 
 	scf, err := loader.Get(source)
 
@@ -118,9 +112,7 @@ func (c *GoCommand) Run(args []string) int {
 
 	validate := *validator.New()
 
-	if verbose {
-		c.UI.Output("Validating source template configuration.")
-	}
+	c.verboseOutput("Validating source template configuration.", verbose)
 
 	err = validate.Struct(scf)
 
@@ -131,9 +123,7 @@ func (c *GoCommand) Run(args []string) int {
 		}
 	}
 
-	if verbose {
-		c.UI.Output("Requesting variables from user.")
-	}
+	c.verboseOutput("Requesting variables from user.", verbose)
 
 	for name, variable := range scf.UserInput {
 		var value string
@@ -145,9 +135,9 @@ func (c *GoCommand) Run(args []string) int {
 
 			if value == "" && variable.Value != "" {
 				value = variable.Value
-			} else if verbose {
-				c.UI.Output("Value is empty and there is no default. Please enter a value.")
 			}
+
+			c.verboseOutput("Value is empty and there is no default. Please enter a value.", verbose)
 		}
 
 		variable.Value = value
@@ -155,15 +145,11 @@ func (c *GoCommand) Run(args []string) int {
 		scf.UserInput[name] = variable
 	}
 
-	if verbose {
-		c.UI.Output("Parsing file conditions and working out applicable files.")
-	}
+	c.verboseOutput("Parsing file conditions and working out applicable files.", verbose)
 
 	filesToCreate := checkFiles(scf.Files, scf.UserInput)
 
-	if verbose {
-		c.UI.Output("Generating files.")
-	}
+	c.verboseOutput("Generating files.", verbose)
 
 	for name, file := range filesToCreate {
 		name = utils.RemovePrefix(parseName(name, dir, scf.UserInput), "/")
@@ -181,9 +167,7 @@ func (c *GoCommand) Run(args []string) int {
 			file.Template = parseTemplate(file.Template, name, path, dir, file.TemplateTags, scf.UserInput)
 		}
 
-		if verbose {
-			c.UI.Output(fmt.Sprintf("Writing file: %s", path))
-		}
+		c.verboseOutput(fmt.Sprintf("Writing file: %s", path), verbose)
 
 		err := c.Writer.Write(path, file)
 
@@ -195,6 +179,12 @@ func (c *GoCommand) Run(args []string) int {
 	}
 
 	return 0
+}
+
+func (c *GoCommand) verboseOutput(output string, verbose bool) {
+	if verbose {
+		c.UI.Output(output)
+	}
 }
 
 func checkFiles(files map[string]scaffold.File, userData map[string]scaffold.Variable) map[string]scaffold.File {
