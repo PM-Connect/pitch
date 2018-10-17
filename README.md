@@ -1,4 +1,4 @@
-# Pitch [![Go Report Card](https://goreportcard.com/badge/github.com/pm-connect/pitch)](https://goreportcard.com/report/github.com/pm-connect/pitch)
+# Pitch [![Build Status](https://travis-ci.org/PM-Connect/pitch.svg?branch=master)](https://travis-ci.org/PM-Connect/pitch) [![Go Report Card](https://goreportcard.com/badge/github.com/pm-connect/pitch)](https://goreportcard.com/report/github.com/pm-connect/pitch)
 
 A simple tool to scaffold/bootstrap files from a single source `yaml` file with flexibility and user variables.
 
