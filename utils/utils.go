@@ -1,6 +1,9 @@
 package utils
 
-import "net/url"
+import (
+	"net/url"
+	"strings"
+)
 
 // IsValidURL checks if a given string is a valid URL.
 func IsValidURL(toTest string) bool {
@@ -11,4 +14,13 @@ func IsValidURL(toTest string) bool {
 	}
 
 	return true
+}
+
+// RemovePrefix strips a prefix from a string if it exists.
+func RemovePrefix(value string, prefix string) string {
+	if strings.HasPrefix(value, prefix) {
+		return strings.TrimPrefix(value, prefix)
+	}
+
+	return value
 }

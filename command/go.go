@@ -159,64 +159,14 @@ func (c *GoCommand) Run(args []string) int {
 		c.UI.Output("Parsing file conditions and working out applicable files.")
 	}
 
-	filesToCreate := make(map[string]scaffold.File)
-
-	for name, file := range scf.Files {
-		if len(file.Conditions) == 0 {
-			filesToCreate[name] = file
-			continue
-		}
-
-		passed := true
-
-		for _, condition := range file.Conditions {
-			switch condition.Operator {
-			case "equal":
-				if scf.UserInput[condition.Field].Value != condition.Value {
-					passed = false
-				}
-			case "not_equal":
-				if scf.UserInput[condition.Field].Value == condition.Value {
-					passed = false
-				}
-			}
-		}
-
-		if passed {
-			filesToCreate[name] = file
-			if verbose {
-				c.UI.Output(fmt.Sprintf("File conditions successful for file: %s", name))
-			}
-		} else if verbose {
-			c.UI.Output(fmt.Sprintf("File conditions failed for file: %s", name))
-		}
-	}
+	filesToCreate := checkFiles(scf.Files, scf.UserInput)
 
 	if verbose {
 		c.UI.Output("Generating files.")
 	}
 
 	for name, file := range filesToCreate {
-		nameTemplate := fasttemplate.New(name, "%", "%")
-
-		name = nameTemplate.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
-			for name, variable := range scf.UserInput {
-				if name == tag {
-					return w.Write([]byte(variable.Value))
-				}
-			}
-
-			switch tag {
-			case "dir":
-				return w.Write([]byte(dir))
-			default:
-				return w.Write([]byte(tag))
-			}
-		})
-
-		if strings.HasPrefix(name, "/") {
-			name = strings.TrimPrefix(name, "/")
-		}
+		name = utils.RemovePrefix(parseName(name, dir, scf.UserInput), "/")
 
 		path := dir + name
 
@@ -228,47 +178,7 @@ func (c *GoCommand) Run(args []string) int {
 		}
 
 		if !file.DisableTemplating {
-			defaultTemplateTags := scaffold.TemplateTags{
-				Open:  "%",
-				Close: "%",
-			}
-
-			var templateTags scaffold.TemplateTags
-
-			if file.TemplateTags.Open != "" && file.TemplateTags.Close != "" {
-				templateTags = file.TemplateTags
-			} else {
-				templateTags = defaultTemplateTags
-			}
-
-			if verbose {
-				c.UI.Output(fmt.Sprintf("Templating enabled for file. Parsing template using tags (open: \"%s\", close: \"%s\")", templateTags.Open, templateTags.Close))
-			}
-
-			template := fasttemplate.New(file.Template, templateTags.Open, templateTags.Close)
-
-			file.Template = template.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
-				if verbose {
-					c.UI.Output(fmt.Sprintf("Replacing variable: %s", tag))
-				}
-
-				for name, variable := range scf.UserInput {
-					if name == tag {
-						return w.Write([]byte(variable.Value))
-					}
-				}
-
-				switch tag {
-				case "current_file":
-					return w.Write([]byte(name))
-				case "current_file_path":
-					return w.Write([]byte(path))
-				case "dir":
-					return w.Write([]byte(dir))
-				default:
-					return w.Write([]byte(tag))
-				}
-			})
+			file.Template = parseTemplate(file.Template, name, path, dir, file.TemplateTags, scf.UserInput)
 		}
 
 		if verbose {
@@ -285,4 +195,91 @@ func (c *GoCommand) Run(args []string) int {
 	}
 
 	return 0
+}
+
+func checkFiles(files map[string]scaffold.File, userData map[string]scaffold.Variable) map[string]scaffold.File {
+	filesToCreate := make(map[string]scaffold.File)
+
+	for name, file := range files {
+		if len(file.Conditions) == 0 {
+			filesToCreate[name] = file
+			continue
+		}
+
+		passed := true
+
+		for _, condition := range file.Conditions {
+			switch condition.Operator {
+			case "equal":
+				if userData[condition.Field].Value != condition.Value {
+					passed = false
+				}
+			case "not_equal":
+				if userData[condition.Field].Value == condition.Value {
+					passed = false
+				}
+			}
+		}
+
+		if passed {
+			filesToCreate[name] = file
+		}
+	}
+
+	return filesToCreate
+}
+
+func parseName(name string, dir string, userData map[string]scaffold.Variable) string {
+	nameTemplate := fasttemplate.New(name, "%", "%")
+
+	return nameTemplate.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+		for name, variable := range userData {
+			if name == tag {
+				return w.Write([]byte(variable.Value))
+			}
+		}
+
+		switch tag {
+		case "dir":
+			return w.Write([]byte(dir))
+		default:
+			return w.Write([]byte(tag))
+		}
+	})
+}
+
+func parseTemplate(template string, name string, path string, dir string, tags scaffold.TemplateTags, userData map[string]scaffold.Variable) string {
+	defaultTemplateTags := scaffold.TemplateTags{
+		Open:  "%",
+		Close: "%",
+	}
+
+	var templateTags scaffold.TemplateTags
+
+	if tags.Open != "" && tags.Close != "" {
+		templateTags = tags
+	} else {
+		templateTags = defaultTemplateTags
+	}
+
+	templater := fasttemplate.New(template, templateTags.Open, templateTags.Close)
+
+	return templater.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+		for name, variable := range userData {
+			if name == tag {
+				return w.Write([]byte(variable.Value))
+			}
+		}
+
+		switch tag {
+		case "current_file":
+			return w.Write([]byte(name))
+		case "current_file_path":
+			return w.Write([]byte(path))
+		case "dir":
+			return w.Write([]byte(dir))
+		default:
+			return w.Write([]byte(tag))
+		}
+	})
 }
