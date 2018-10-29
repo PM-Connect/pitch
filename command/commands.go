@@ -6,6 +6,7 @@ import (
 
 	"github.com/mitchellh/cli"
 	"github.com/pm-connect/pitch/scaffold"
+	input "github.com/tcnksm/go-input"
 )
 
 func generalOptionsUsage() string {
@@ -32,6 +33,11 @@ func Commands() map[string]cli.CommandFactory {
 		ErrorColor: cli.UiColorRed,
 		WarnColor:  cli.UiColorYellow,
 		InfoColor:  cli.UiColorGreen,
+	}
+
+	meta.Input = &input.UI{
+		Writer: os.Stdout,
+		Reader: os.Stdin,
 	}
 
 	return map[string]cli.CommandFactory{

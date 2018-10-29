@@ -9,6 +9,7 @@ import (
 
 	"github.com/pm-connect/pitch/scaffold"
 	"github.com/pm-connect/pitch/utils"
+	input "github.com/tcnksm/go-input"
 	"github.com/valyala/fasttemplate"
 	validator "gopkg.in/go-playground/validator.v9"
 )
@@ -30,11 +31,17 @@ Usage: pitch go <source> <directory>
 
 General Options:
 
-	source:
+	source: string
 		The source url/path to the yaml template.
 
-	directory:
+	directory: string
 		The directory to scaffold/bootstrap into.
+
+	-overwrite:
+		Automatically overwrite existing files without prompting.
+
+	-dry-run:
+		Run without any mutations or file creation.
 
     ` + generalOptionsUsage() + `
     `
@@ -50,11 +57,12 @@ func (c *GoCommand) Name() string { return "build" }
 
 // Run starts the build procedure.
 func (c *GoCommand) Run(args []string) int {
-	var verbose, overwrite bool
+	var verbose, overwrite, dryrun bool
 
 	flags := flag.NewFlagSet(c.Name(), flag.ContinueOnError)
 	flags.BoolVar(&verbose, "verbose", false, "Turn on verbose output.")
 	flags.BoolVar(&overwrite, "overwrite", false, "Automatically overwrite existing files.")
+	flags.BoolVar(&dryrun, "dry-run", false, "Run without writing/creating any files.")
 	flags.Parse(args)
 
 	args = flags.Args()
@@ -68,7 +76,10 @@ func (c *GoCommand) Run(args []string) int {
 	if len(args) > 1 {
 		dir = args[1]
 	} else {
-		userDir, err := c.UI.Ask("Please enter a directory name (use ./ for current path):")
+		userDir, err := c.Input.Ask("Please enter a directory name (use ./ for current path):", &input.Options{
+			Required: true,
+			Loop:     true,
+		})
 
 		if err != nil {
 			c.UI.Error(fmt.Sprintf("%s", err))
@@ -126,15 +137,11 @@ func (c *GoCommand) Run(args []string) int {
 
 		c.UI.Output(fmt.Sprintf("Fetching variable \"%s\"", name))
 
-		for value == "" {
-			value, _ = c.UI.Ask(variable.Description)
-
-			if value == "" && variable.Value != "" {
-				value = variable.Value
-			}
-
-			c.verboseOutput("Value is empty and there is no default. Please enter a value.", verbose)
-		}
+		value, _ = c.Input.Ask(variable.Description, &input.Options{
+			Required: true,
+			Loop:     true,
+			Default:  variable.Value,
+		})
 
 		variable.Value = value
 
@@ -153,7 +160,18 @@ func (c *GoCommand) Run(args []string) int {
 		path := dir + name
 
 		if _, err := os.Stat(path); !os.IsNotExist(err) && !overwrite {
-			overwrite, _ := c.UI.Ask(fmt.Sprintf("File \"%s\" already exists. Overwrite? (y|n)", path))
+			overwrite, _ := c.Input.Ask(fmt.Sprintf("File \"%s\" already exists. Overwrite? (y|n)", path), &input.Options{
+				Required: true,
+				Loop:     true,
+				ValidateFunc: func(s string) error {
+					if s != "Y" && s != "y" && s != "n" {
+						return fmt.Errorf("input must be Y, y, or n")
+					}
+
+					return nil
+				},
+			})
+
 			if strings.ToLower(overwrite) != "y" {
 				continue
 			}
@@ -165,12 +183,14 @@ func (c *GoCommand) Run(args []string) int {
 
 		c.verboseOutput(fmt.Sprintf("Writing file: %s", path), verbose)
 
-		err := c.Writer.Write(path, file)
+		if !dryrun {
+			err := c.Writer.Write(path, file)
 
-		if err != nil {
-			c.UI.Error(fmt.Sprintf("Error writing file \"%s\": %s", path, err))
-		} else {
-			c.UI.Info(fmt.Sprintf("Created file \"%s\".", path))
+			if err != nil {
+				c.UI.Error(fmt.Sprintf("Error writing file \"%s\": %s", path, err))
+			} else {
+				c.UI.Info(fmt.Sprintf("Created file \"%s\".", path))
+			}
 		}
 	}
 
