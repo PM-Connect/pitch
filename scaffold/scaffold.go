@@ -10,8 +10,9 @@ type Scaffold struct {
 
 // Variable is the config for a variable of mixed types (multi-select, text, etc).
 type Variable struct {
-	Description string `yaml:"description" validate:"required"`
-	Value       string `yaml:"value"`
+	Description string   `yaml:"description" validate:"required"`
+	Value       string   `yaml:"value"`
+	Options     []string `yaml:"options"`
 }
 
 // File is the structure of a file template.

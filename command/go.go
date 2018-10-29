@@ -7,9 +7,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/manifoldco/promptui"
 	"github.com/pm-connect/pitch/scaffold"
 	"github.com/pm-connect/pitch/utils"
-	input "github.com/tcnksm/go-input"
 	"github.com/valyala/fasttemplate"
 	validator "gopkg.in/go-playground/validator.v9"
 )
@@ -76,10 +76,17 @@ func (c *GoCommand) Run(args []string) int {
 	if len(args) > 1 {
 		dir = args[1]
 	} else {
-		userDir, err := c.Input.Ask("Please enter a directory name (use ./ for current path):", &input.Options{
-			Required: true,
-			Loop:     true,
-		})
+		userDirPrompt := promptui.Prompt{
+			Label: "Please enter a directory name (use ./ for current path):",
+			Validate: func(input string) error {
+				if _, err := os.Stat(input); os.IsNotExist(err) {
+					return fmt.Errorf("Unable to find directory: %s", input)
+				}
+
+				return nil
+			},
+		}
+		userDir, err := userDirPrompt.Run()
 
 		if err != nil {
 			c.UI.Error(fmt.Sprintf("%s", err))
@@ -135,13 +142,31 @@ func (c *GoCommand) Run(args []string) int {
 	for name, variable := range scf.UserInput {
 		var value string
 
-		c.UI.Output(fmt.Sprintf("Fetching variable \"%s\"", name))
+		if verbose {
+			c.UI.Output(fmt.Sprintf("Fetching variable \"%s\"", name))
+		}
 
-		value, _ = c.Input.Ask(variable.Description, &input.Options{
-			Required: true,
-			Loop:     true,
-			Default:  variable.Value,
-		})
+		var err error
+
+		if len(variable.Options) > 0 {
+			variableValueSelect := promptui.Select{
+				Label: variable.Description,
+				Items: variable.Options,
+			}
+			_, value, err = variableValueSelect.Run()
+		} else {
+			variableValuePrompt := promptui.Prompt{
+				Label: variable.Description,
+			}
+			value, err = variableValuePrompt.Run()
+		}
+
+		if err != nil {
+			if len(variable.Value) == 0 {
+				c.UI.Error(fmt.Sprintf("%s", err))
+				return 1
+			}
+		}
 
 		variable.Value = value
 
@@ -160,21 +185,17 @@ func (c *GoCommand) Run(args []string) int {
 		path := dir + name
 
 		if _, err := os.Stat(path); !os.IsNotExist(err) && !overwrite {
-			overwrite, _ := c.Input.Ask(fmt.Sprintf("File \"%s\" already exists. Overwrite? (y|n)", path), &input.Options{
-				Required: true,
-				Loop:     true,
-				ValidateFunc: func(s string) error {
-					if s != "Y" && s != "y" && s != "n" {
-						return fmt.Errorf("input must be Y, y, or n")
-					}
-
-					return nil
-				},
-			})
+			overwriteConfirm := promptui.Prompt{
+				Label:     fmt.Sprintf("File \"%s\" already exists. Overwrite? (y|n)", path),
+				IsConfirm: true,
+			}
+			overwrite, _ := overwriteConfirm.Run()
 
 			if strings.ToLower(overwrite) != "y" {
 				continue
 			}
+
+			c.UI.Output(fmt.Sprintf("Overwriting file: %s", path))
 		}
 
 		if !file.DisableTemplating {

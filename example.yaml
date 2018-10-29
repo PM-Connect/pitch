@@ -1,8 +1,13 @@
 user_input:
     project_name:
-      description: "Enter a project name:"
+      description: "Enter a name for your project"
     use_main_file:
       description: "Include the main file? (y|n)"
+    select_one:
+      description: "Please select an option"
+      options:
+        - test
+        - hello
 
 files:
     path/%project_name%.nomad:

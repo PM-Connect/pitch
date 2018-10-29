@@ -2,9 +2,13 @@ module github.com/pm-connect/pitch
 
 require (
 	github.com/Flaque/filet v0.0.0-20180310200134-dbf95344df50
+	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-playground/locales v0.12.1 // indirect
 	github.com/go-playground/universal-translator v0.16.0 // indirect
+	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a // indirect
+	github.com/lunixbochs/vtclean v0.0.0-20180621232353-2d01aacdc34a // indirect
+	github.com/manifoldco/promptui v0.3.1
 	github.com/mitchellh/cli v1.0.0
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pmezard/go-difflib v1.0.0 // indirect
